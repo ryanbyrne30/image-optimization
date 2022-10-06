@@ -10,5 +10,5 @@ def upload_to_s3(image: str, key: str) -> str:
     )
     key = f"{config.AWS_BASE_FOLDER}/{key}"
     response = s3.upload_file(image, config.AWS_BUCKET_NAME, key)
-    print(response, response is None)
+    print("AWS response", response, response is None)
     return f"{config.AWS_URL}/{key}" if response is None else None

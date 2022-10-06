@@ -7,7 +7,6 @@ app = Flask(__name__)
 @app.route("/upload_image", methods=["POST"])
 def upload_image():
     file = request.files["file"]
-
     if not pu.is_file_allowed(file.filename):
         return jsonify(success=False, message="No file given.")
     if not file or not pu.is_file_allowed(file.filename):
