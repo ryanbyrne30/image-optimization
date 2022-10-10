@@ -41,13 +41,6 @@ resource "digitalocean_droplet" "image-optimizer" {
     private_key = file(var.do_pvt)
     timeout     = "2m"
   }
-
-  provisioner "remote-exec" {
-    inline = [
-      "apt-get update",
-      "snap install docker"
-    ]
-  }
 }
 
 

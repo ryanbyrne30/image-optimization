@@ -1,0 +1,115 @@
+# - name: Setup VM
+#   hosts: image_optimizer
+#   remote_user: root
+#   vars:
+#     ansible_ssh_private_key_file: "{{ lookup('env', 'DO_PVT') }}"
+
+#   tasks:
+#     - name: Update system
+#       apt:
+#         update_cache: yes
+#         upgrade: yes
+
+# - name: Setup Docker
+#   hosts: image_optimizer
+#   remote_user: root
+#   vars:
+#     ansible_ssh_private_key_file: "{{ lookup('env', 'DO_PVT') }}"
+
+#   tasks:
+#     - name: Install Docker dependencies
+#       ansible.builtin.apt:
+#         name:
+#           - ca-certificates
+#           - curl
+#           - gnupg
+#           - lsb-release
+#         state: present
+
+#     - name: Create keyrings file
+#       ansible.builtin.file:
+#         path: /etc/apt/keyrings
+#         owner: root
+#         group: root
+
+#     - name: Remove old keyrings
+#       ansible.builtin.file:
+#         path: /etc/apt/keyrings/docker.gpg
+#         state: absent
+
+#     - name: Add Docker's GPG Key
+#       ansible.builtin.raw: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+#       args:
+#         executable: /bin/bash
+
+#     - name: Setup Docker repo
+#       ansible.builtin.raw: echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+#       args:
+#         executable: /bin/bash
+
+#     - name: Install Docker Engine
+#       ansible.builtin.apt:
+#         name:
+#           - docker-ce
+#           - docker-ce-cli
+#           - containerd.io
+#           - docker-compose-plugin
+#         update_cache: true
+
+# - name: Setup ClamAV
+#   hosts: image_optimizer
+#   remote_user: root
+#   vars:
+#     ansible_ssh_private_key_file: "{{ lookup('env', 'DO_PVT') }}"
+
+#   tasks:
+#     - name: Install ClamAV
+#       ansible.builtin.apt:
+#         name:
+#           - clamav
+#           - clamav-daemon
+#         state: latest
+
+#     - name: Stop freshclam service
+#       ansible.builtin.systemd:
+#         name: clamav-freshclam.service
+#         state: stopped
+
+#     - name: Run freshclam
+#       ansible.builtin.raw: freshclam
+#       args:
+#         executable: /bin/bash
+
+#     - name: Restart freshclam
+#       ansible.builtin.systemd:
+#         name: clamav-freshclam.service
+#         state: restarted
+#         enabled: true
+
+#     - name: Restart clamd
+#       ansible.builtin.systemd:
+#         name: clamav-daemon.service
+#         state: restarted
+#         enabled: true
+
+- name: Setup Service Account
+  hosts: image_optimizer
+  remote_user: root
+  vars:
+    ansible_ssh_private_key_file: "{{ lookup('env', 'DO_PVT') }}"
+    service_authorized_key_file: "{{ lookup('env', 'DO_SVC_PUB') }}"
+
+  tasks:
+    - name: Create service account
+      ansible.builtin.user:
+        name: volevents
+        shell: /bin/bash
+        groups: clamav
+        append: yes
+        create_home: yes
+
+    - name: Set authorized key for service account
+      ansible.posix.authorized_key:
+        user: volevents
+        state: present
+        key: "{{ lookup('file', '/home/ryan/.ssh/digitalocean/do_volevents.pub') }}"
