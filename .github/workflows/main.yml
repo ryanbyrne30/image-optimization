@@ -27,5 +27,10 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: Deploy to Host
-        run: |
-          scp -i ${{ secrets.HOST_KEY }} . ${{ secrets.HOST_USER }}@${{ secrets.HOST_IP }}
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST_IP }}
+          username: ${{ secrets.HOST_USER }}
+          key: ${{ secrets.HOST_KEY }}
+          source: .
+          target: /home/${{ secrets.HOST_USER }}
